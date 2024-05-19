@@ -46,13 +46,19 @@ int main(){
             case '!':{
                 string cmd, path;
                 cin>>cmd>>path;
-                if (cmd=="Save"){
-                    trie.save_trie(path);
-                } else if (cmd=="Load"){
-                    trie.load_trie(path);
+                try{
+                    if (cmd=="Save"){
+                        trie.save_trie(path);
+                    } else if (cmd=="Load"){
+                        trie.load_trie(path);
+                    }
+                    cout<<"OK";
+                } catch (const TCustom_error& e){
+                    cout<<"ERROR: " << e.what();
                 }
+
                 // Загружаем/выгружаем словарь
-                cout << "OK";
+                // cout << "OK";
                 break;
             }
             default:

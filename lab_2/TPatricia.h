@@ -54,6 +54,10 @@ namespace Patricia_trie{
             void load_nodes(TNode* cur_node, ifstream &stream);
             void read_node_from_file(ifstream &stream);
 
+            void del_node(TNode* node);
+            void check_root();
+            void root_create();
+
     };
 
 };

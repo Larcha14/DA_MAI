@@ -260,7 +260,6 @@ ofstream& operator <<(ofstream& os, TStr &el){
 }
 
 
-
 namespace Patricia_trie{
 
     int make_idx(int letter_pos, int bit_pos);
@@ -309,7 +308,10 @@ namespace Patricia_trie{
             void write_node_to_file(TNode* cur_node, ofstream &file_to);
             void load_nodes(TNode* cur_node, ifstream &stream);
             void read_node_from_file(ifstream &stream);
-            bool root_create();
+
+            void del_node(TNode* node);
+            void check_root();
+            void root_create();
 
     };
 
@@ -317,22 +319,6 @@ namespace Patricia_trie{
 
 typedef Patricia_trie::TNode TNode;
 
-bool Patricia_trie::TTrie::root_create(){
-    // if (root!=NULL) return false; 
-    root = (TNode*)malloc(sizeof(TNode));
-    if (root==NULL){
-        throw TCustom_error("Unable to create root");
-        
-    }
-    // root= tmp_node;
-    root->idx=-1;
-    root->refs[0]=root;
-    root->refs[1]=NULL;
-    TStr init_str;
-    root->str_key = init_str;
-    // cout<<"[INFO] init root: "<<root->str_key<<" Val = "<<root->val<<'\n';
-    return true;
-}
 
 int Patricia_trie::make_idx(int letter_pos, int bit_pos){
     return letter_pos*BIT_COUNT + bit_pos; 
@@ -349,6 +335,31 @@ TMy_pair<int, int> Patricia_trie::get_idx(int idx){
 Patricia_trie::TTrie::TTrie(){
     elem_count=0;
     root_create();
+}
+
+void Patricia_trie::TTrie::root_create(){
+    root = (TNode*)malloc(sizeof(TNode));
+    if (root == NULL){
+        throw TCustom_error("Unable to create node");
+    }
+    TStr tmp_str;
+    root->str_key = tmp_str;
+    root->refs[0] = root;
+    root->refs[1] = NULL;
+    root->idx = -1;
+    // cout<<"[INFO] add root: "<<root->str_key<<" Val = "<<root->val<<'\n';
+}
+
+void Patricia_trie::TTrie::check_root(){
+    if (root==NULL) root_create();
+}
+
+void Patricia_trie::TTrie::del_node(TNode* node){
+    if(node != NULL){
+        // cout<<"[INFO] del node: "<<node->str_key<<" Val = "<<node->val<<'\n';
+        free(node);
+        node = NULL;
+    }
 }
 
 TMy_pair< TNode*, TNode*> Patricia_trie::TTrie::find_node(TNode *needed_node){
@@ -431,9 +442,10 @@ TMy_pair<TNode*, TMy_pair<TNode*, TNode*>>  Patricia_trie::TTrie::find_PRC(TStr 
 }
 
 bool Patricia_trie::TTrie::erase(TStr needed_key){
+    check_root();
     if (this->elem_count == 0 or root==NULL){
-        throw TCustom_error("NoSuchWord");
         // throw TCustom_error("Unable to del node. Trie is empty");
+        throw TCustom_error("NoSuchWord");
     }
     TMy_pair<TNode*, TMy_pair<TNode*, TNode*>>  all_nodes = find_PRC(needed_key);
     
@@ -457,6 +469,11 @@ bool Patricia_trie::TTrie::erase(TStr needed_key){
     TNode* prev_prev_node = all_nodes.first; // M
     // cout<<"Path to del: \n\tcur node = "<<all_nodes.second.second->str_key<<"\n\tprev_node = "<<all_nodes.second.first->str_key<<"\n\tprev_prev_node = "<<all_nodes.first->str_key<<"\n";
 
+    // if (cur_node == root){
+    //     root->str_key = prev_node->str_key;
+    //     root->val = prev_node->val;
+    //     if( prev_prev_node->refs[0]==prev_node) prev_prev_node->refs[0] = root
+    // }
 
     if (prev_node==cur_node){
         bool return_leave, new_leave;
@@ -469,8 +486,8 @@ bool Patricia_trie::TTrie::erase(TStr needed_key){
 
         prev_prev_node->refs[new_leave] = cur_node->refs[!return_leave];
         // cout<<"\n[INFO] del elem: "<<cur_node->str_key<<" val = "<<cur_node->val<<"\n";
-        
-        free(cur_node);
+        // free(cur_node);
+        del_node(cur_node);
         elem_count--;
         return true;
     }
@@ -511,8 +528,8 @@ bool Patricia_trie::TTrie::erase(TStr needed_key){
 
     cur_node->str_key = move(prev_node->str_key);
     cur_node->val = prev_node->val;
-    // cout<<"\n[INFO] del elem: "<<prev_node->str_key<<" val = "<<cur_node->val<<"\n";
-    free(prev_node);
+    // free(prev_node);
+    del_node(prev_node);
 
     elem_count--;
     return true;
@@ -546,14 +563,35 @@ bool Patricia_trie::TTrie::add(TNode* new_node){
 
         new_node->refs[check_bit] = new_node;
         new_node->refs[!check_bit] = nodes.second;
+        // cout<<"\n=========================\n";
+        // cout<<"New_node: ";
+        // if (new_node == NULL){
+        //     cout<<"NULL\n";
+        // } else{
+        //     cout<<" str = "<<new_node->str_key<<" val="<<new_node->val<<" idx= "<<new_node->idx<<"\n";
+        //     // print_bit_mask(STRING_LENGTH*BIT_COUNT - new_node->idx,    STRING_LENGTH*BIT_COUNT);
 
+        // }
+        // cout<<"Childs: 0 = ";
+        // if (new_node->refs[0]!=NULL){
+        //     cout<<new_node->refs[0]->str_key;
+        // } else {
+        //     cout<<"NULL";
+        // }
+        // cout<<"\n\t1 = ";
+        // if (new_node->refs[1]!=NULL){
+        //     cout<<new_node->refs[1]->str_key;
+        // } else {
+        //     cout<<"NULL\n";
+        // }
+        // cout<<"\n=========================\n";
         return true;
     }
 }
 
 bool Patricia_trie::TTrie::insert(TStr insert_key, uint64_t insert_val){
     if (elem_count ==0 ){
-        if (root==NULL) root_create();
+        check_root();
         root->str_key= insert_key;
         root->val=insert_val;
         elem_count++;
@@ -576,6 +614,7 @@ bool Patricia_trie::TTrie::insert(TStr insert_key, uint64_t insert_val){
 }
 
 TMy_pair<bool, uint64_t> Patricia_trie::TTrie::search(TStr neded_key){
+    check_root();
     TMy_pair<bool, uint64_t> answ_pair(false, 0);
     TNode* tmp_node = (TNode*)malloc(sizeof(TNode));
     tmp_node->str_key = neded_key;
@@ -588,11 +627,10 @@ TMy_pair<bool, uint64_t> Patricia_trie::TTrie::search(TStr neded_key){
         answ_pair.second=cur_node->val;
 
     }
-    free(tmp_node);
+    // free(tmp_node);
+    del_node(tmp_node);
     return answ_pair;
 }
-
-
 
 TNode* Patricia_trie::TTrie::get_root(){
     return root;
@@ -603,7 +641,9 @@ int Patricia_trie::TTrie::size(){
 }
 
 void Patricia_trie::TTrie::print_trie(){
+    check_root();
     cout<<"\n=====================TRIE==================\n";
+    cout<<"Size: "<<size()<<"\n";
     cout<<"Root: ";
     if (root!=NULL or elem_count!=0){
         cout<<" str = "<<root->str_key<<" val="<<root->val<<" idx= "<<root->idx<<'\n';
@@ -649,8 +689,12 @@ void Patricia_trie::TTrie::print_nodes(TNode* node, int prev_idx){
 void Patricia_trie::TTrie::save_trie(string & path){
     ofstream file_to;
     file_to.open(path, ios_base::trunc | ios_base::binary);
+    if (!file_to.good()){
+        throw TCustom_error("Unable to open file");
+    }
     file_to<<elem_count<<"\n";
     // file_to.write(elem_count, sizeof(elem_count));
+    check_root();
     if (elem_count>0){
         save_nodes(root, file_to);
     }
@@ -670,27 +714,25 @@ void Patricia_trie::TTrie::write_node_to_file(TNode* cur_node, ofstream &file_to
 }
 
 void Patricia_trie::TTrie::load_trie(string & path){
+    // this->destroy_tree();
     ifstream file_from;
     file_from.open(path, ios_base::binary);
-    // cout<<"suc: "<<file_from.good()<<"\n";
     if (!file_from.good()){
         throw TCustom_error("Unable to open file");
     }
-    int new_size=0;
+    int new_size;
     int cnt=0;
     file_from>>new_size;
-    // if (new_size>0){
     // cout<<"Our size = "<<new_size<<"\n";
-        this->destroy_tree();
-        root_create();
-        while (cnt < new_size){
-            // cout<<"Cur size = "<<this->size()<<"\n";
-            // cout<<"Hui\n"
-            read_node_from_file(file_from);
-            cnt++;
-        }   
-    // }
-
+    this->destroy_tree();
+    check_root();
+    elem_count = 0;
+    while (cnt < new_size){
+        // cout<<"Cur size = "<<this->size()<<"\n";
+        // cout<<"Hui\n"
+        read_node_from_file(file_from);
+        cnt++;
+    }
     // TNode* tmp = (TNode*)malloc(sizeof(TNode));
     // file_from>> tmp->str_key;
     // cout<<"Our string: "<<tmp->str_key<<"\n";
@@ -716,8 +758,7 @@ void Patricia_trie::TTrie::destroy_nods(TNode* cur_node){
     }
     if (cur_node->refs[0]!=NULL and cur_node->idx < cur_node->refs[0]->idx) destroy_nods(cur_node->refs[0]);
     if (cur_node->refs[1]!=NULL and cur_node->idx < cur_node->refs[1]->idx) destroy_nods(cur_node->refs[1]);
-    // cout<<"\n[INFO] del node: key = "<<cur_node->str_key<<" val = "<<cur_node->val<<"\n";
-    free(cur_node);
+    del_node(cur_node);
     return;
 }
 
@@ -730,22 +771,20 @@ void Patricia_trie::TTrie::destroy_tree(){
 }
 
 Patricia_trie::TTrie::~TTrie(){
-
     destroy_tree();
 }
 
 
 int main(){
     Patricia_trie::TTrie trie;
-    // ios::sync_with_stdio(false);
-    // cin.tie(0);
     string request;
-    int cnt=1;
     while(cin>>request){
         // cin>>request;
-        cout<<cnt<<" : ";
-        cnt++;
         switch (request[0]){
+            case '=':{
+                cout<<trie.size()<<'\n';
+                break;
+            }
             case '@':{
                 trie.print_trie();
                 break;
@@ -755,7 +794,6 @@ int main(){
                 uint64_t val;
                 cin>>word>>val;
                 // cout<<"\nThis is +\n";
-                
                 if(trie.insert(word, val)){
                     cout<<"OK";
                 } else{
@@ -766,7 +804,6 @@ int main(){
             case '-':{
                 TStr word;
                 cin>>word;
-                // cout<<"\nThis is -\n";
                 try
                 {
                     if (trie.erase(word)){
@@ -784,21 +821,17 @@ int main(){
             case '!':{
                 string cmd, path;
                 cin>>cmd>>path;
-                if (cmd=="Save"){
-                    trie.save_trie(path);
-                    cout << "OK";
-                } else if (cmd=="Load"){
-                    try
-                    {
+                try{
+                    if (cmd=="Save"){
+                        trie.save_trie(path);
+                    } else if (cmd=="Load"){
                         trie.load_trie(path);
-                        cout<<"OK";
                     }
-                    catch(const TCustom_error& e)
-                    {
-                        cout << e.what();
-                    }  
-                    // trie.load_trie(path);
+                    cout<<"OK";
+                } catch (const TCustom_error& e){
+                    cout<<"ERROR: " << e.what();
                 }
+
                 // Загружаем/выгружаем словарь
                 // cout << "OK";
                 break;
