@@ -1,0 +1,39 @@
+P_size =  7354
+T_size =  1000000
+Probability =  0.59
+
+=====Test Probability======
+Array  'Pattern sizes' :  [7354]
+Array  'Text sizes' :  [1000000]
+Array  'Probability' :  [0.1, 0.32, 0.54, 0.76, 0.98]
+tests/01 was created; Cnt of el =  1000000
+tests/02 was created; Cnt of el =  1000000
+tests/03 was created; Cnt of el =  1000000
+tests/04 was created; Cnt of el =  1000000
+tests/05 was created; Cnt of el =  1000000
+
+=====Test Pattern size change======
+Array  'Pattern sizes' :  [3, 2252, 4501, 6750, 8999]
+Array  'Text sizes' :  [1000000]
+Array  'Probability' :  [0.59]
+tests/06 was created; Cnt of el =  1000000
+tests/07 was created; Cnt of el =  1000000
+tests/08 was created; Cnt of el =  1000000
+tests/09 was created; Cnt of el =  1000000
+tests/10 was created; Cnt of el =  1000000
+
+=====Test Text size change======
+Array  'Pattern sizes' :  [7354]
+Array  'Text sizes' :  [10000, 109000, 208000, 307000, 406000, 505000, 604000, 703000, 802000, 901000, 1000000]
+Array  'Probability' :  [0.59]
+tests/11 was created; Cnt of el =  10000
+tests/12 was created; Cnt of el =  109000
+tests/13 was created; Cnt of el =  208000
+tests/14 was created; Cnt of el =  307000
+tests/15 was created; Cnt of el =  406000
+tests/16 was created; Cnt of el =  505000
+tests/17 was created; Cnt of el =  604000
+tests/18 was created; Cnt of el =  703000
+tests/19 was created; Cnt of el =  802000
+tests/20 was created; Cnt of el =  901000
+tests/21 was created; Cnt of el =  1000000
