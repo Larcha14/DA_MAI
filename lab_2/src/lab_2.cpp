@@ -607,6 +607,7 @@ bool Patricia_trie::TTrie::insert(TStr insert_key, uint64_t insert_val){
     new_node->val = insert_val;
     new_node->str_key= insert_key;
     if (!add(new_node)){
+        free(new_node);
         return false;
     }
     elem_count++; 
@@ -614,7 +615,7 @@ bool Patricia_trie::TTrie::insert(TStr insert_key, uint64_t insert_val){
 }
 
 TMy_pair<bool, uint64_t> Patricia_trie::TTrie::search(TStr neded_key){
-    check_root();
+    //check_root();
     TMy_pair<bool, uint64_t> answ_pair(false, 0);
     TNode* tmp_node = (TNode*)malloc(sizeof(TNode));
     tmp_node->str_key = neded_key;
@@ -766,7 +767,10 @@ void Patricia_trie::TTrie::destroy_nods(TNode* cur_node){
 
 void Patricia_trie::TTrie::destroy_tree(){
     elem_count = 0;
-    if (root!=NULL) destroy_nods(root->refs[0]);
+    if (root!=NULL){
+        destroy_nods(root->refs[0]);
+        del_node(root);
+    }
     root =NULL;
 }
 
@@ -776,6 +780,8 @@ Patricia_trie::TTrie::~TTrie(){
 
 
 int main(){
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
     Patricia_trie::TTrie trie;
     string request;
     while(cin>>request){
